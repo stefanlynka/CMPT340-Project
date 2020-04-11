@@ -1,0 +1,50 @@
+#:kivy 1.11.1
+
+<WidgetAligner>:
+    #button: button
+    #id: button
+    pos: 0, 0
+    size: 100, 50
+#    canvas:
+#        Rectangle:
+#            pos: self.pos[0] - self.size[0]/2, self.pos[1] - self.size[1]/2
+#            size: self.size
+
+<OptionWidget>:
+    button: option_button
+    highlight: button_highlight
+    pos: 0, 0
+    size: 100, 50
+    text: "Option Widget"
+    Button:
+        id: option_button
+        pos:self.parent.pos
+        size:self.parent.size
+        text:self.parent.text
+    Button:
+        id: button_highlight
+        pos: option_button.pos
+        size: option_button.size
+        text: option_button.text
+        text: option_button.text
+        on_press: root.select()
+        background_color: 0.1, 0.1, 0.1, 1
+        opacity: 0
+<InputMenu>:
+    canvas:
+        Rectangle:
+            pos: 0, self.height/8
+            size: self.width, 10
+        Rectangle:
+            pos: 0, self.height*7/8
+            size: self.width, 10
+
+<ChangeScreenButton>:
+    button: screen_button
+    pos: 0, 0
+    size: 150, 50
+    Button:
+        id: screen_button
+        pos: self.parent.pos
+        size: self.parent.size
+        on_press: root.change_screen()
