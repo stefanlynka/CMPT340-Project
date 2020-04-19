@@ -311,7 +311,7 @@ class Results(Screen):
                 output = "virtually no chance"
             myResult = str("You have " + output + " of having or contracting Covid-19.")
             myResultTitle = "Covid-19"
-            myTips ="Tips\n - Get in touch with a healthcare provider. \n - Monitor your symptoms, get immediate help if you experience serious symptoms like trouble breathing. \n - Avoid sharing personal items. \n - Wear a face covering \n - If you are at risk or don't feel well, consult a doctor."
+            myTips ="Tips\n - Monitor your symptoms, get immediate help if you experience serious symptoms like trouble breathing. \n - Avoid sharing personal items. \n - Wear a face covering \n - If you are at risk or don't feel well, consult a doctor."
         elif mostPoints == cold:
             if percentages[0]==1:
                 output = "a virtually certain chance"
