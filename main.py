@@ -21,14 +21,16 @@ from enum import Enum
 from kivy.uix.widget import Widget
 
 Vector2 = namedtuple("Vector2", "x y")
-
+AppTitle = "Cough-O-Meter: A Mobile Respiratory Illness Diagnostic Tool"
+ResultsTitle = "Results"
 
 class InputMenu(Screen):
     main_aligner = None
     aligners = []
     screen_info = None
-    aligner_offset = 40
+    aligner_offset = -25
     screen_number = 0
+    mostPoints = 0
     def __init__(self, new_screen_info, new_screen_number):
         Screen.__init__(self)
         self.screen_info = new_screen_info
@@ -36,35 +38,50 @@ class InputMenu(Screen):
         self.screen_number = new_screen_number
         for screenInfo in new_screen_info.option_sets:
             print("screenInfo.name: " + str(screenInfo.name) + "\n",end="",flush=True)
+
     def build(self):
         Global.mapSize = Vector2(x=Window.size[0], y=Window.size[1])
                     
         Clock.schedule_interval(self.update, 1.0/60.0)
-
-        self.add_top_buttons()
-        self.add_bottom_buttons()
+        print("NAME: " + self.name)
+        if self.name == AppTitle:
+            self.add_title_buttons()
+        else:
+            self.add_top_buttons()
+            self.add_bottom_buttons()
 
         self.main_aligner = WidgetAligner(Direction.VERTICAL, (Global.mapSize.x/2, Global.mapSize.y/2), self.aligner_offset)
         self.aligners.append(self.main_aligner)
         self.add_widget(self.main_aligner)
         print("Map Size: " + str(Global.mapSize.x) + " " + str(Global.mapSize.y)+"\n", end="", flush=True)
-        title_label = Label(text=self.screen_info.screen_title, font_size='60sp')
+
+
+        if self.name == AppTitle:
+            title_label = Label(text=self.screen_info.screen_title, font_size='25sp')
+        else:
+            title_label = Label(text=self.screen_info.screen_title, font_size='60sp')
+        
+
         self.main_aligner.add_widget(title_label)
+              
         print("Text: " + self.screen_info.screen_title + "\n", end="", flush=True)
 
         for option_set in self.screen_info.option_sets:
             self.add_option_set((Global.mapSize.x/2, Global.mapSize.y/2), option_set)
 
+
     def add_option_set(self, pos, option_set):
         new_option_set = OptionSetWidget(option_set, Direction.HORIZONTAL, pos, 10)
         self.aligners.append(new_option_set.aligner)
+        option_set_label = Label(text=option_set.name, font_size='20sp')
+        self.main_aligner.add_new_widget(option_set_label)
         self.main_aligner.add_new_widget(new_option_set.aligner)
 
     def update(self, dt):
         Global.mapSize = Vector2(x=Window.size[0], y=Window.size[1])
         for aligner in self.aligners:
             aligner.update()
-        #print("Total Points: "+str(self.screen_info.get_total())+"\n", end="", flush=True)
+        #print("Total Points: "+str(Global.GetTotalPoints(Global.screen_info_list))+"\n", end="", flush=True)
     def add_bottom_buttons(self):
         new_aligner = WidgetAligner(Direction.HORIZONTAL, (Global.mapSize.x/2, Global.mapSize.y/20), Global.mapSize.x*0.6)
         self.aligners.append(new_aligner)
@@ -77,11 +94,18 @@ class InputMenu(Screen):
         new_aligner = WidgetAligner(Direction.HORIZONTAL, (Global.mapSize.x/2, Global.mapSize.y*19/20), Global.mapSize.x*0.025)
         self.aligners.append(new_aligner)
         self.add_widget(new_aligner)
-        for screen in Global.screen_info_list:
-            new_button = ChangeScreenButton(ScreenButtonType.TARGET, new_screen_name=screen.screen_title)
-            new_aligner.add_widget(new_button, len(new_aligner.children))
+        new_button = ChangeScreenButton(ScreenButtonType.TARGET, new_screen_name="RESTART")
+        new_aligner.add_widget(new_button, len(new_aligner.children))
         pass
-
+    def add_title_buttons(self):
+        new_aligner = WidgetAligner(Direction.HORIZONTAL, (Global.mapSize.x/2, Global.mapSize.y/20), Global.mapSize.x*0.6)
+        self.aligners.append(new_aligner)
+        self.add_widget(new_aligner)
+        start_button = ChangeScreenButton(ScreenButtonType.NEXT, new_screen_name="START")
+        new_aligner.add_widget(start_button)
+    
+ 
+    
 class ScreenButtonType(Enum):
     NEXT = 0
     PREVIOUS = 1
@@ -102,17 +126,18 @@ class ChangeScreenButton(Widget):
     def change_screen(self):
         if self.button_type == ScreenButtonType.NEXT:
             Global.screen_manager.transition.direction = 'left'
-            Global.screen_manager.current = Global.screen_manager.next()
+            if Global.screen_manager.current == 'Symptoms 6':
+                Global.screen_manager.switch_to(Results())
+            else:
+                Global.screen_manager.current = Global.screen_manager.next()
         elif self.button_type == ScreenButtonType.PREVIOUS:
             Global.screen_manager.transition.direction = 'right'
             Global.screen_manager.current = Global.screen_manager.previous()
         elif self.button_type == ScreenButtonType.TARGET:
             Global.screen_manager.transition.direction = 'left'
-            if Global.screen_manager.current_screen.screen_number > Global.screen_manager.get_screen(self.screen_name).screen_number:
+            if Global.screen_manager.current_screen.screen_number > Global.screen_manager.get_screen(AppTitle).screen_number:
                 Global.screen_manager.transition.direction = 'right'
-            Global.screen_manager.current = self.screen_name
-
-
+            Global.screen_manager.current = AppTitle
 
 class Direction(Enum):
     HORIZONTAL = 0
@@ -146,6 +171,7 @@ class WidgetAligner(Widget):
             edge += child.size[self.direction.value] + self.offset
 #print(""+str()+"\n",end="",flush=True)
 
+
 class OptionSetWidget(Widget):
     aligner = None
     option_set = None
@@ -168,6 +194,193 @@ class OptionSetWidget(Widget):
             if child != selected_option:
                 child.deselect()
 
+class Results(Screen):
+    main_aligner = None
+    aligners = []
+    aligner_offset=-25
+    def __init__(self, **kwargs):
+        super(Results, self).__init__(**kwargs)
+        self.build()
+    def build(self):
+        c19, cold, flu, asthma, COPD, LC, PH, P, B = Global.GetTotalPoints(Global.screen_info_list)
+        allPoints = [c19, cold, flu, asthma, COPD, LC, PH, P, B]
+        percentages = [c19/11.2,cold/11.4,flu/12.8,asthma/9.5,COPD/10.7,LC/12.3,PH/11.5,P/13,B/10.2]
+        maxPercentage = max(percentages)
+        mostPoints = max(allPoints)
+        if maxPercentage <= 0.01:
+            myResult = "You have virtually no chance of having or contracting any respitory conditions"
+            myResultTitle = "No Symptoms Met"
+            myTips = "- However if you truly do not feel well, consult a doctor."
+        elif mostPoints == c19:
+            if percentages[0]==1:
+                output = "a virtually certain chance"
+            elif percentages[0] < 1 and percentages[0] >= 0.80:
+                output = "a very likely chance"
+            elif percentages[0] < 0.80 and percentages[0] >= 0.60:
+                output = "a likely chance"
+            elif percentages[0] < 0.60 and percentages[0] >= 0.40:
+                output = "about as likely a chance as not"
+            elif percentages[0] < 0.40 and percentages[0] >= 0.20:
+                output = "an unlikely chance"
+            elif percentages[0] < 0.20 and percentages[0] > 0.01:
+                output = "a very unlikely chance"
+            elif percentages[0] <= 0.01:
+                output = "virtually no chance"
+            myResult = str("You have " + output + " of having or contracting Covid-19.")
+            myResultTitle = "Covid-19"
+            myTips ="Tips\n - Get in touch with a healthcare provider. \n - Monitor your symptoms, get immediate help if you experience serious symptoms like trouble breathing. \n - Avoid sharing personal items. \n - Wear a face covering \n - If you are at risk or don't feel well, consult a doctor."
+        elif mostPoints == cold:
+            if percentages[0]==1:
+                output = "a virtually certain chance"
+            elif percentages[0] < 1 and percentages[0] >= 0.80:
+                output = "a very likely chance"
+            elif percentages[0] < 0.80 and percentages[0] >= 0.60:
+                output = "a likely chance"
+            elif percentages[0] < 0.60 and percentages[0] >= 0.40:
+                output = "about as likely a chance as not"
+            elif percentages[0] < 0.40 and percentages[0] >= 0.20:
+                output = "an unlikely chance"
+            elif percentages[0] < 0.20 and percentages[0] > 0.01:
+                output = "a very unlikely chance"
+            elif percentages[0] <= 0.01:
+                output = "virtually no chance"
+            myResult = str("You have " + output + " of having or contracting the common cold.")
+            myResultTitle = "Common Cold"
+            myTips = "Tips\n - Get more rest.\n - Drink plenty of fluids. \n - If you have a stuffy nose, try adding more moisture to the air using a humidifier. \n - If you are at risk or don't feel well, consult a doctor."
+        elif mostPoints == flu:
+            if percentages[0]==1:
+                output = "a virtually certain chance"
+            elif percentages[0] < 1 and percentages[0] >= 0.80:
+                output = "a very likely chance"
+            elif percentages[0] < 0.80 and percentages[0] >= 0.60:
+                output = "a likely chance"
+            elif percentages[0] < 0.60 and percentages[0] >= 0.40:
+                output = "about as likely a chance as not"
+            elif percentages[0] < 0.40 and percentages[0] >= 0.20:
+                output = "an unlikely chance"
+            elif percentages[0] < 0.20 and percentages[0] > 0.01:
+                output = "a very unlikely chance"
+            elif percentages[0] <= 0.01:
+                output = "virtually no chance"
+            myResult = str("You have " + output + " of having or contracting influenza.")
+            myResultTitle = "Influenza"
+            myTips = "Tips\n - Get more rest. \n - Drink plenty of fluids. \n - Monitor your symptoms, get immediate help if you experience serious symptoms like trouble breathing. \n - If you are at risk or don't feel well, consult a doctor."
+        elif mostPoints == asthma:
+            if percentages[0]==1:
+                output = "a virtually certain chance"
+            elif percentages[0] < 1 and percentages[0] >= 0.80:
+                output = "a very likely chance"
+            elif percentages[0] < 0.80 and percentages[0] >= 0.60:
+                output = "a likely chance"
+            elif percentages[0] < 0.60 and percentages[0] >= 0.40:
+                output = "about as likely a chance as not"
+            elif percentages[0] < 0.40 and percentages[0] >= 0.20:
+                output = "an unlikely chance"
+            elif percentages[0] < 0.20 and percentages[0] > 0.01:
+                output = "a very unlikely chance"
+            elif percentages[0] <= 0.01:
+                output = "virtually no chance"
+            myResult = str("You have " + output + " of having or contracting asthma.")
+            myResultTitle = "Asthma"
+            myTips = "Tips\n - Identify asthma triggers and take steps to avoid them. \n - Get your vaccinations. \n - Take your medications.\n - Avoid catching colds. \n - If you are at risk or don't feel well, consult a doctor."
+        elif mostPoints == COPD:
+            if percentages[0]==1:
+                output = "a virtually certain chance"
+            elif percentages[0] < 1 and percentages[0] >= 0.80:
+                output = "a very likely chance"
+            elif percentages[0] < 0.80 and percentages[0] >= 0.60:
+                output = "a likely chance"
+            elif percentages[0] < 0.60 and percentages[0] >= 0.40:
+                output = "about as likely a chance as not"
+            elif percentages[0] < 0.40 and percentages[0] >= 0.20:
+                output = "an unlikely chance"
+            elif percentages[0] < 0.20 and percentages[0] > 0.01:
+                output = "a very unlikely chance"
+            elif percentages[0] <= 0.01:
+                output = "virtually no chance"
+            myResult = str("You have " + output + " of having or contracting chronic obstructive pulmonary disease.")
+            myResultTitle = "Chronic Obstructive Pulmonary Disease"
+            myTips = "Tips\n - Do more exercise.\n - Eat a healthier diet. \n - Drink plenty of fluids. \n - Use a humidifier. \n - If you are at risk or don't feel well, consult a doctor."
+        elif mostPoints == LC:
+            if percentages[0]==1:
+                output = "a virtually certain chance"
+            elif percentages[0] < 1 and percentages[0] >= 0.80:
+                output = "a very likely chance"
+            elif percentages[0] < 0.80 and percentages[0] >= 0.60:
+                output = "a likely chance"
+            elif percentages[0] < 0.60 and percentages[0] >= 0.40:
+                output = "about as likely a chance as not"
+            elif percentages[0] < 0.40 and percentages[0] >= 0.20:
+                output = "an unlikely chance"
+            elif percentages[0] < 0.20 and percentages[0] > 0.01:
+                output = "a very unlikely chance"
+            elif percentages[0] <= 0.01:
+                output = "virtually no chance"
+            myResult = str("You have " + output + " of having or contracting lung cancer.")
+            myResultTitle = "Lung Cancer"
+            myTips = "Tips\n - Eat lots of vegetables and fruits. \n - Exercise regularly. \n - Avoid carcinogens and smoke. \n - If you are at risk or don't feel well, consult a doctor."
+        elif mostPoints == PH:
+            if percentages[0]==1:
+                output = "a virtually certain chance"
+            elif percentages[0] < 1 and percentages[0] >= 0.80:
+                output = "a very likely chance"
+            elif percentages[0] < 0.80 and percentages[0] >= 0.60:
+                output = "a likely chance"
+            elif percentages[0] < 0.60 and percentages[0] >= 0.40:
+                output = "about as likely a chance as not"
+            elif percentages[0] < 0.40 and percentages[0] >= 0.20:
+                output = "an unlikely chance"
+            elif percentages[0] < 0.20 and percentages[0] > 0.01:
+                output = "a very unlikely chance"
+            elif percentages[0] <= 0.01:
+                output = "virtually no chance"
+            myResult = str("You have " + output + " of having or contracting pulmonary hypertension.")
+            myResultTitle = "Pulmonary Hypertension"
+            myTips = "Tips\n - Get plenty of rest. \n - Exercise regularly. \n - Avoid smokes. \n - Eat a healthy diet. \n - If you are at risk or don't feel well, consult a doctor."
+        elif mostPoints == P:
+            if percentages[0]==1:
+                output = "a virtually certain chance"
+            elif percentages[0] < 1 and percentages[0] >= 0.80:
+                output = "a very likely chance"
+            elif percentages[0] < 0.80 and percentages[0] >= 0.60:
+                output = "a likely chance"
+            elif percentages[0] < 0.60 and percentages[0] >= 0.40:
+                output = "about as likely a chance as not"
+            elif percentages[0] < 0.40 and percentages[0] >= 0.20:
+                output = "an unlikely chance"
+            elif percentages[0] < 0.20 and percentages[0] > 0.01:
+                output = "a very unlikely chance"
+            elif percentages[0] <= 0.01:
+                output = "virtually no chance"
+            myResult = str("You have " + output + " of having or contracting pneumonia.")
+            myResultTitle = "Pneumonia"
+            myTips = "Tips\n - Get plenty of rest. \n - Drink plenty of fluids. \n - Take your medications as prescribed. \n - If you are at risk or don't feel well, consult a doctor."
+        elif mostPoints == B:
+            if percentages[0]==1:
+                output = "a virtually certain chance"
+            elif percentages[0] < 1 and percentages[0] >= 0.80:
+                output = "a very likely chance"
+            elif percentages[0] < 0.80 and percentages[0] >= 0.60:
+                output = "a likely chance"
+            elif percentages[0] < 0.60 and percentages[0] >= 0.40:
+                output = "about as likely a chance as not"
+            elif percentages[0] < 0.40 and percentages[0] >= 0.20:
+                output = "an unlikely chance"
+            elif percentages[0] < 0.20 and percentages[0] > 0.01:
+                output = "a very unlikely chance"
+            elif percentages[0] <= 0.01:
+                output = "virtually no chance"
+            myResult = str("You have " + output + " of having or contracting bronchitis.")
+            myResultTitle = "Bronchitus"
+            myTips = "Tips\n - Avoid chemical fumes, dusts, smoke, and anything else bothering your lungs. \n - Get plenty of rest. \n - Drink plenty of fluids. \n - If you are at risk or don't feel well, consult a doctor."
+        self.label = Label(text=myResult,font_size = '15sp', pos=[0,25])
+        self.add_widget(self.label)
+        self.label2 = Label(text=myResultTitle, font_size='40sp',pos=[0,100])
+        self.add_widget(self.label2)
+        self.label3 = Label(text=myTips, font_size='15sp', pos=[0,-50])
+        self.add_widget(self.label3)
+
+
 class OptionWidget(Widget):
     button = ObjectProperty(None)
     highlight = ObjectProperty(None)
@@ -184,7 +397,16 @@ class OptionWidget(Widget):
         self.option_set.deselect_all(self)
         self.highlight.opacity = 1
         self.option.chosen = True
-        print("Total Points: "+str(Global.GetTotalPoints(Global.screen_info_list)) + "\n", end="", flush=True)
+        c19, cold, flu, asthma, COPD, LC, PH, P, B = Global.GetTotalPoints(Global.screen_info_list)
+        print("Covid-19 Total Points: "+str(c19) + "\n", end="", flush=True)
+        print("Cold Total Points: "+str(cold) + "\n", end="", flush=True)
+        print("Flu Total Points: "+str(flu) + "\n", end="", flush=True)
+        print("Asthma Total Points: "+str(asthma) + "\n", end="", flush=True)
+        print("Chronic Obstructive Pulmonary Disease Total Points: "+str(COPD) + "\n", end="", flush=True)
+        print("Lung Cancer Total Points: "+str(LC) + "\n", end="", flush=True)
+        print("Pulmonary Hypertension Total Points: "+str(PH) + "\n", end="", flush=True)
+        print("Pneumonia Total Points: "+str(P) + "\n", end="", flush=True)
+        print("Bronchitis Total Points: "+str(B) + "\n", end="", flush=True)
     def deselect(self):
         self.highlight.opacity = 0
         self.option.chosen = False
@@ -196,16 +418,15 @@ class OptionWidget(Widget):
 class DiagnosisApp(App):
     def build(self):
         print("\n",end="",flush=True)
-
         screen_num = 0
         for screen in Global.screen_info_list:
             new_screen = InputMenu(screen, screen_num)
             new_screen.build()
             Global.screen_manager.add_widget(new_screen)
             screen_num += 1
-            print("Screen Name " + str(new_screen.name) + "\n",end="",flush=True)
-
-
+            print("Screen Name " + str(screen.screen_title) + "\n",end="",flush=True)
+        screen2 = Results(name=ResultsTitle)
+        Global.screen_manager.add_widget(screen2)
         #menu = InputMenu(Global.SampleScreen1)
         #menu.build()
         return Global.screen_manager
