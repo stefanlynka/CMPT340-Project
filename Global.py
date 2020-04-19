@@ -129,6 +129,7 @@ Screen1OptionSet1 = OptionSet("How old are you?", [
     Option("age<1 ", 0,1,1,0,0,0,0,1,0),
     Option("1<age<2",0,0,1,0,0,0,0,1,0),
     Option("2<age<6",0,0,1,0,0,0,0,0,0),
+    Option("6<age<65",0,0,0,0,0,0,0,0,0),
     Option("age>65", 1,0,1,0,0,0,0,1,0)
 ])
 SampleScreen1.add_option_set(Screen1OptionSet1)
@@ -317,5 +318,9 @@ Symptoms6OptionSet2 = OptionSet("Has your heart been beating a lot faster than n
     Option("no",0,0,0,0,0,0,0,0,0)
 ])
 Symptoms6.add_option_set(Symptoms6OptionSet2)
+
+ResultsNeeded = ScreenInfo("")
+screen_info_list.append(ResultsNeeded)
+
 
 screen_manager = ScreenManager()

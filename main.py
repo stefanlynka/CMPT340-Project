@@ -18,18 +18,25 @@ from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProper
 from kivy.vector import Vector
 from enum import Enum
 
+from kivy.graphics import Color, Rectangle
 from kivy.uix.widget import Widget
 
 Vector2 = namedtuple("Vector2", "x y")
 Vector2a = namedtuple("Vector2a", "xa ya")
 AppTitle = "Cough-O-Meter: A Mobile Respiratory Illness Diagnostic Tool"
-ResultsTitle = "Results"
+
+emptyBackground = "images/empty.png"
+background = "images/background.png"
+first_page = "images/first_page.png"
+button_pressed = "images/button-pressed.png"
+button_unpressed = "images/button-unpressed.png"
+
 
 class InputMenu(Screen):
     main_aligner = None
     aligners = []
     screen_info = None
-    aligner_offset = -25
+    aligner_offset = -15
     screen_number = 0
     mostPoints = 0
     def __init__(self, new_screen_info, new_screen_number):
@@ -53,18 +60,20 @@ class InputMenu(Screen):
 
         self.main_aligner = WidgetAligner(Direction.VERTICAL, (Global.mapSize.x/2, Global.mapSize.y/2), self.aligner_offset)
         self.aligners.append(self.main_aligner)
-        self.add_widget(self.main_aligner)
+        self.add_widget(self.main_aligner, index=3)
         print("Map Size: " + str(Global.mapSize.x) + " " + str(Global.mapSize.y)+"\n", end="", flush=True)
 
 
         if self.name == AppTitle:
-            title_label = Label(text=self.screen_info.screen_title, font_size='25sp')
+            self.add_titlepage()
         else:
-            title_label = Label(text=self.screen_info.screen_title, font_size='60sp')
-        
+            title_label = Label(text=self.screen_info.screen_title, font_size='30sp', color=[0, 0, 0, 1], font_name= 'Calibri')
+            self.main_aligner.add_widget(title_label)
+            self.add_background() 
 
-        self.main_aligner.add_widget(title_label)
-              
+
+
+   
         print("Text: " + self.screen_info.screen_title + "\n", end="", flush=True)
 
         for option_set in self.screen_info.option_sets:
@@ -74,7 +83,7 @@ class InputMenu(Screen):
     def add_option_set(self, pos, option_set):
         new_option_set = OptionSetWidget(option_set, Direction.HORIZONTAL, pos, 10)
         self.aligners.append(new_option_set.aligner)
-        option_set_label = Label(text=option_set.name, font_size='20sp')
+        option_set_label = Label(text=option_set.name, font_size='20sp', color=[0, 0, 0, 1], font_name= 'Calibri')
         self.main_aligner.add_new_widget(option_set_label)
         self.main_aligner.add_new_widget(new_option_set.aligner)
 
@@ -104,15 +113,24 @@ class InputMenu(Screen):
         self.add_widget(new_aligner)
         start_button = ChangeScreenButton(ScreenButtonType.NEXT, new_screen_name="START")
         new_aligner.add_widget(start_button)
+
+    def add_titlepage(self):
+        with self.main_aligner.canvas.before:
+            self.rect = Rectangle(size=Global.mapSize, source=first_page)
+    def add_background(self):
+        with self.main_aligner.canvas.before:
+            self.rect = Rectangle(size=Global.mapSize, source=background)
     
  
-    
 class ScreenButtonType(Enum):
     NEXT = 0
     PREVIOUS = 1
     TARGET = 2
 
 class ChangeScreenButton(Widget):
+    aligner_offset = -15
+    main_aligner = []
+    aligners = []
     button = ObjectProperty(None)
     screen_name = ""
     button_type = ScreenButtonType.NEXT
@@ -122,13 +140,19 @@ class ChangeScreenButton(Widget):
         self.screen_name = new_screen_name
         self.button.center = new_center
         self.button.text = new_type.name
+        #self.button.color = [0,0,0,1]
+        self.button.background_normal = button_unpressed
+        self.button.background_down = button_pressed
         if new_screen_name != "":
             self.button.text = new_screen_name
     def change_screen(self):
         if self.button_type == ScreenButtonType.NEXT:
             Global.screen_manager.transition.direction = 'left'
             if Global.screen_manager.current == 'Symptoms 6':
-                Global.screen_manager.switch_to(Results(name = ResultsTitle))    
+                sEmpty = EmptyScreen(name="empty")
+                Global.screen_manager.add_widget(sEmpty)
+                Global.screen_manager.current = "empty"
+                Global.screen_manager.switch_to(Results())    
             else:
                 Global.screen_manager.current = Global.screen_manager.next()
         elif self.button_type == ScreenButtonType.PREVIOUS:
@@ -150,12 +174,14 @@ class ChangeScreenButton2(Widget):
         self.screen_name = new_screen_name
         self.button.center = new_center
         self.button.text = new_type.name
+        #self.button.color = [0,0,0,1]
+        self.button.background_normal = button_unpressed
+        self.button.background_down = button_pressed
         if new_screen_name != "":
             self.button.text = new_screen_name
     def change_screen(self):
         if self.button_type == ScreenButtonType.TARGET:
-            Global.screen_manager.clear_widgets()
-            DiagnosisApp().build()
+            Global.screen_manager.current = AppTitle
             
             
 class Direction(Enum):
@@ -213,10 +239,34 @@ class OptionSetWidget(Widget):
             if child != selected_option:
                 child.deselect()
 
-class Results(Screen):
-    main_aligner = None
+class EmptyScreen(Screen):
+    aligner_offset = -15
+    main_aligner = []
     aligners = []
-    aligner_offset=-25
+    def __init__(self, **kwargs):
+        super(EmptyScreen, self).__init__(**kwargs)
+        self.build()
+    def build(self):
+        Global.mapSize = Vector2(x=Window.size[0], y=Window.size[1])  
+        Clock.schedule_interval(self.update, 1.0/60.0)
+        self.main_aligner = WidgetAligner(Direction.VERTICAL, (Global.mapSize.x/2, Global.mapSize.y/2), self.aligner_offset)
+        self.aligners.append(self.main_aligner)
+        self.add_widget(self.main_aligner, index=3)
+        self.add_background() 
+        self.label = Label(text="",font_size = '15sp', pos=[0,25])
+        self.add_widget(self.label)
+    def update(self, dt):
+        Global.mapSize2 = Vector2a(xa=Window.size[0], ya=Window.size[1])
+        for aligner in self.aligners:
+            aligner.update()
+    def add_background(self):
+        with self.main_aligner.canvas.before:
+            self.rect = Rectangle(size=Global.mapSize, source=emptyBackground)
+
+class Results(Screen):
+    main_aligner = []
+    aligners = []
+    aligner_offset=-15
     def __init__(self, **kwargs):
         super(Results, self).__init__(**kwargs)
         self.build()
@@ -228,6 +278,14 @@ class Results(Screen):
         percentages = [c19/11.2,cold/11.4,flu/12.8,asthma/9.5,COPD/10.7,LC/12.3,PH/11.5,P/13,B/10.2]
         maxPercentage = max(percentages)
         mostPoints = max(allPoints)
+
+        self.main_aligner = WidgetAligner(Direction.VERTICAL, (Global.mapSize.x/2, Global.mapSize.y/2), self.aligner_offset)
+        self.aligners.append(self.main_aligner)
+        self.add_widget(self.main_aligner, index=3)
+
+        with self.main_aligner.canvas.before:
+            self.rect = Rectangle(size=Global.mapSize, source=background)
+
         self.main_aligner = WidgetAligner(Direction.VERTICAL, (Global.mapSize2.xa/2, Global.mapSize2.ya/2), self.aligner_offset)
         self.aligners.append(self.main_aligner)
         self.add_widget(self.main_aligner)
@@ -398,11 +456,11 @@ class Results(Screen):
             myResult = str("You have " + output + " of having or contracting bronchitis.")
             myResultTitle = "Bronchitus"
             myTips = "Tips\n - Avoid chemical fumes, dusts, smoke, and anything else bothering your lungs. \n - Get plenty of rest. \n - Drink plenty of fluids. \n - If you are at risk or don't feel well, consult a doctor."
-        self.label = Label(text=myResult,font_size = '15sp', pos=[0,25])
+        self.label = Label(text=myResult,font_size = '15sp', pos=[0,25], color=[0, 0, 0, 1])
         self.add_widget(self.label)
-        self.label2 = Label(text=myResultTitle, font_size='40sp',pos=[0,100])
+        self.label2 = Label(text=myResultTitle, font_size='40sp',pos=[0,100], color=[0, 0, 0, 1])
         self.add_widget(self.label2)
-        self.label3 = Label(text=myTips, font_size='15sp', pos=[0,-50])
+        self.label3 = Label(text=myTips, font_size='15sp', pos=[0,-50], color=[0, 0, 0, 1])
         self.add_widget(self.label3)
         self.add_top_buttons()
 
@@ -431,10 +489,13 @@ class OptionWidget(Widget):
         self.button.text = self.option.name
         self.option_set = new_option_set
         self.highlight.opacity = 0
+        self.button.background_normal = button_unpressed
+        self.button.background_down = button_pressed
     def select(self):
         self.option_set.deselect_all(self)
-        self.highlight.opacity = 1
+        self.highlight.opacity = 0
         self.option.chosen = True
+        self.button.background_normal = button_pressed
         c19, cold, flu, asthma, COPD, LC, PH, P, B = Global.GetTotalPoints(Global.screen_info_list)
         print("Covid-19 Total Points: "+str(c19) + "\n", end="", flush=True)
         print("Cold Total Points: "+str(cold) + "\n", end="", flush=True)
@@ -448,6 +509,7 @@ class OptionWidget(Widget):
     def deselect(self):
         self.highlight.opacity = 0
         self.option.chosen = False
+        self.button.background_normal = button_unpressed
 
 
 class DiagnosisApp(App):
@@ -460,7 +522,7 @@ class DiagnosisApp(App):
             Global.screen_manager.add_widget(new_screen)
             screen_num += 1
             print("Screen Name " + str(screen.screen_title) + "\n",end="",flush=True)
-        screen2 = Results(name=ResultsTitle)
+        screen2 = Results()
         Global.screen_manager.add_widget(screen2)
         #menu = InputMenu(Global.SampleScreen1)
         #menu.build()

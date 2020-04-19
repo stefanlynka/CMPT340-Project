@@ -71,3 +71,12 @@
         pos: self.parent.pos
         size: self.parent.size
         on_press: root.change_screen()
+
+<EmptyScreen>
+    canvas:
+        Rectangle:
+            pos: 0, self.height/8
+            size: self.width, 10
+        Rectangle:
+            pos: 0, self.height*7/8
+            size: self.width, 10
