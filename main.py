@@ -21,6 +21,7 @@ from enum import Enum
 from kivy.uix.widget import Widget
 
 Vector2 = namedtuple("Vector2", "x y")
+Vector2a = namedtuple("Vector2a", "xa ya")
 AppTitle = "Cough-O-Meter: A Mobile Respiratory Illness Diagnostic Tool"
 ResultsTitle = "Results"
 
@@ -127,7 +128,7 @@ class ChangeScreenButton(Widget):
         if self.button_type == ScreenButtonType.NEXT:
             Global.screen_manager.transition.direction = 'left'
             if Global.screen_manager.current == 'Symptoms 6':
-                Global.screen_manager.switch_to(Results())
+                Global.screen_manager.switch_to(Results(name = ResultsTitle))    
             else:
                 Global.screen_manager.current = Global.screen_manager.next()
         elif self.button_type == ScreenButtonType.PREVIOUS:
@@ -139,6 +140,24 @@ class ChangeScreenButton(Widget):
                 Global.screen_manager.transition.direction = 'right'
             Global.screen_manager.current = AppTitle
 
+class ChangeScreenButton2(Widget):
+    button = ObjectProperty(None)
+    screen_name = ""
+    button_type = ScreenButtonType.NEXT
+    def __init__(self,  new_type,  new_center=(0,0), new_screen_name=""):
+        Widget.__init__(self)
+        self.button_type = new_type
+        self.screen_name = new_screen_name
+        self.button.center = new_center
+        self.button.text = new_type.name
+        if new_screen_name != "":
+            self.button.text = new_screen_name
+    def change_screen(self):
+        if self.button_type == ScreenButtonType.TARGET:
+            Global.screen_manager.clear_widgets()
+            DiagnosisApp().build()
+            
+            
 class Direction(Enum):
     HORIZONTAL = 0
     VERTICAL = 1
@@ -202,11 +221,17 @@ class Results(Screen):
         super(Results, self).__init__(**kwargs)
         self.build()
     def build(self):
+        Global.mapSize2 = Vector2a(xa=Window.size[0], ya=Window.size[1])
+        Clock.schedule_interval(self.update, 1.0/60.0)
         c19, cold, flu, asthma, COPD, LC, PH, P, B = Global.GetTotalPoints(Global.screen_info_list)
         allPoints = [c19, cold, flu, asthma, COPD, LC, PH, P, B]
         percentages = [c19/11.2,cold/11.4,flu/12.8,asthma/9.5,COPD/10.7,LC/12.3,PH/11.5,P/13,B/10.2]
         maxPercentage = max(percentages)
         mostPoints = max(allPoints)
+        self.main_aligner = WidgetAligner(Direction.VERTICAL, (Global.mapSize2.xa/2, Global.mapSize2.ya/2), self.aligner_offset)
+        self.aligners.append(self.main_aligner)
+        self.add_widget(self.main_aligner)
+
         if maxPercentage <= 0.01:
             myResult = "You have virtually no chance of having or contracting any respitory conditions"
             myResultTitle = "No Symptoms Met"
@@ -379,6 +404,19 @@ class Results(Screen):
         self.add_widget(self.label2)
         self.label3 = Label(text=myTips, font_size='15sp', pos=[0,-50])
         self.add_widget(self.label3)
+        self.add_top_buttons()
+
+    def add_top_buttons(self):
+        new_aligner = WidgetAligner(Direction.HORIZONTAL, (Global.mapSize2.xa/2, Global.mapSize2.ya*19/20), Global.mapSize2.xa*0.025)
+        self.aligners.append(new_aligner)
+        self.add_widget(new_aligner)
+        new_button = ChangeScreenButton2(ScreenButtonType.TARGET, new_screen_name="RESTART")
+        new_aligner.add_widget(new_button)
+    def update(self, dt):
+        Global.mapSize2 = Vector2a(xa=Window.size[0], ya=Window.size[1])
+        for aligner in self.aligners:
+            aligner.update()
+
 
 
 class OptionWidget(Widget):
@@ -410,9 +448,6 @@ class OptionWidget(Widget):
     def deselect(self):
         self.highlight.opacity = 0
         self.option.chosen = False
-
-
-
 
 
 class DiagnosisApp(App):

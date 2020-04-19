@@ -4,8 +4,10 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 
 MY_NUMBER = 0
 Vector2 = namedtuple("Vector2", "x y")
+Vector2a = namedtuple("Vector2a", "xa ya")
 
 mapSize = Vector2(x=0, y=0)
+mapSize2 = Vector2a(xa=0, ya=0)
 
 screen_info_list = []
 

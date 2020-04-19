@@ -51,6 +51,8 @@
         size: self.parent.size
         on_press: root.change_screen()
 
+
+
 <Results>
     canvas:
         Rectangle:
@@ -59,3 +61,13 @@
         Rectangle:
             pos: 0, self.height*7/8
             size: self.width, 10
+
+<ChangeScreenButton2>:
+    button: screen_button
+    pos: 0, 0
+    size: 150, 50
+    Button:
+        id: screen_button
+        pos: self.parent.pos
+        size: self.parent.size
+        on_press: root.change_screen()
