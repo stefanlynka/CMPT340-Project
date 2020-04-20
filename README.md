@@ -1,6 +1,6 @@
 # Cough-O-Meter
 
-Cough-O-Meter is a respiratory illness diagnostic tool completed as a final project for CMPT 340.  
+Cough-O-Meter is a question and answer based, respiratory illness diagnostic tool completed as a final project for CMPT 340.  
 
 
 ## Getting Started
@@ -35,7 +35,7 @@ python -m pip install kivy_deps.gstreamer==0.1.*
 Note, for Python 3.5+, angle backend can be used instead of glew. Install angle backend by:
 
 ```bash
-python -m pip install kivy_deps.gstreamer==0.1.*
+python -m pip install kivy_deps.angle==0.1.*
 ```
 
 Finally, to install Kivy, we run:
@@ -91,3 +91,37 @@ Do you feel a sense of tightness or pressure in your chest? yes
 Are you noticing a bluish tint to your lips and/or skin? no
 ```
 
+As another example, as shown below, we provided a different set of answers to the questions and obtained a different prediction. This time, the tool gave us "you have about as likely a chance of as not of having or contracting influenza." 
+
+```
+How old are you? 2<age<6
+Do you have any chronic illnesses or a weakened immune system? yes
+Is the current season fall or winter? no
+Have you been to crowded areas? yes
+Have you had any exposure to smoking cigarettes (firsthand or secondhand)? no
+Do you or have you worked in an environment that exposes you to lung irritants such as dusts and/or chemicals? no
+Are you overweight? no
+Are you aware of any family members that have lung cancer? no
+Are you aware of any family members that have pulmonary hypertension? no
+Have you undergone any type of radiation therapy in the past? no
+Have you used drugs (Weight-loss, Illegal, Selective Serotonin Reuptake Inhibitors? no
+Do you experience regurgitation or heartburn? no 
+
+Do you have a fever > 37.6 degrees celsius? yes
+Have you been coughing? yes
+Have you recently started experiencing a loss or alteration of smell or taste? yes
+Have you recently started experiencing lingering tiredness? yes
+Have you suddenly been experiencing muscle or chest pain lately? yes
+Do you currently have a runny or stuffy nose? yes
+Do you currently have a sore throat? yes
+Have you been having diarrhea recently? yes
+Do you currently have a headache? yes
+Are you currently experiencing a shortness of breath? no
+Have you been sneezing a lot lately? no
+Have you been coughing up blood or a lot of spit or phlegm recently? no
+Have you recently been experiencing swelling in your ankles and knees? no
+Has your heart been beating a lot faster than normal? no
+When you breathe, do you hear wheezing sounds? no
+Do you feel a sense of tightness or pressure in your chest? no
+Are you noticing a bluish tint to your lips and/or skin? no
+```
