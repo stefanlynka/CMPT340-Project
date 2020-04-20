@@ -308,12 +308,12 @@ Symptoms5.add_option_set(Symptoms5OptionSet3)
 Symptoms6 = ScreenInfo("Symptoms 6")
 screen_info_list.append(Symptoms6)
 
-Symptoms6OptionSet1 = OptionSet("Have you recently been experiencing swelling in your ankles and knees?", [
+Symptoms6OptionSet1 = OptionSet("Do you feel a sense of tightness or pressure in your chest?", [
     Option("yes",1,0,0,1,1,1,1,0,0.8),
     Option("no",0,0,0,0,0,0,0,0,0)
 ])
 Symptoms6.add_option_set(Symptoms6OptionSet1)
-Symptoms6OptionSet2 = OptionSet("Has your heart been beating a lot faster than normal? ", [
+Symptoms6OptionSet2 = OptionSet("Are you noticing a bluish tint to your lips and/or skin?", [
     Option("yes",0,0,0,0,0.5,0,1,1,0),
     Option("no",0,0,0,0,0,0,0,0,0)
 ])
