@@ -1,6 +1,6 @@
 # Cough-O-Meter
 
-Cough-O-Meter is a respiratory illness diagnostic tool completed for the CMPT 340 final project. 
+Cough-O-Meter is a respiratory illness diagnostic tool completed as a final project for CMPT 340.  
 
 
 ## Getting Started
